@@ -1,46 +1,110 @@
+#define _POSIX_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <definitions.h>
+
+#define PROCESO_APAGADO -1
+pid_t GB_pids[4];
+
+void instalarSignal();
+void finalizarProcesos(int signal);
 
 int main(){
+
+    char respuesta_c[100];
+    int tuberia[2];
+    instalarSignal();
+    ejecutarProceso(PA, tuberia);
+    waitProceso();
+
+    ejecutarProceso(PB, tuberia);
+
+}
+
+
+
+void ejecutarProceso(char *proceso, int tuberia[]){
+    char *path;
     int pid;
-    for(int i=0;i<2;i++){
-        pid=fork();
+    pipe(tuberia);
+    if (strcmp(proceso, PA) == 0){
+        path = PA_PATH;
+        pid = fork();
+        GB_pids[0] = pid;
+    }
+    else if (strcmp(proceso, PB) == 0){
+        path = PB_PATH;
+        pid = fork();
+        GB_pids[1] = pid;
+    }
+    else if (strcmp(proceso, PC) == 0){
+        dup2(tuberia[1], STDOUT_FILENO);
+        path = PC_PATH;
+        pid = fork();
+        GB_pids[2] = pid;
+    }
+    else if (strcmp(proceso, PD) == 0){
+        path = PD_PATH;
+        pid = fork();
+        GB_pids[3] = pid;
+    }else{
+        fprintf(stderr, "[MANAGER] Proceso no encontrado.\n");
     }
     switch (pid){
-        
-        case 0:
-        printf("%d\n",pid);
-        printf("Soy %d ",getpid());
-        PA();   
+    case -1:
+        fprintf(stderr, "[MANAGER] Error creando el proceso A\n");
+        exit(EXIT_FAILURE);
         break;
-        default:
-        printf("Soy el padre\n");
+    case 0:
+        execl(path, proceso, NULL, NULL);
+        fprintf(stderr, "[MANAGER] Return no esperado. Ha fallado al ejecución del proceso.\n");
+        break;
+
+    default:
         break;
     }
 }
 
-int PA(void) {
-    const char* filename = "estudiantes_p1.text";
-    char delimitador[] = " ";
-    int contador=0;
-    FILE* input_file = fopen(filename, "r");
-    if (!input_file)
+void instalarSeñal(){
+    if (signal(SIGINT, finalizarProcesos) == SIG_ERR)
+    {
+        fprintf(stderr, "[MANAGER] Error instalando la señal");
         exit(EXIT_FAILURE);
-    
-    char *contents = NULL;
-    size_t len = 0;
-    while (getline(&contents, &len, input_file) != -1){
-        char *token = strtok(contents, delimitador);
-        
-        if(token != NULL){
-        mkdir(token, S_IRWXU);
     }
+}
+
+void finalizarProcesos(int signal){
+    matarProceso(GB_pids[0]);
+    matarProceso(GB_pids[1]);
+    matarProceso(GB_pids[2]);
+
+    GB_pids[3] = fork();
+
+    switch (GB_pids[3]){
+    case -1:
+        fprintf(stderr, "[MANAGER] Error creando el proceso A\n");
+        exit(EXIT_FAILURE);
+        break;
+    case 0:
+        execl(PD_PATH, PD, NULL, NULL);
+        fprintf(stderr, "[MANAGER] Return no esperado. Ha fallado al ejecución del proceso.\n");
+        break;
+
+    default:
+        waitProceso();
+        break;
     }
-
-    fclose(input_file);
-    free(contents);
-
-    exit(EXIT_SUCCESS);
+    void matarProceso(pid_t pid){
+    if (pid != PROCESO_APAGADO){
+        if (kill(pid, SIGKILL) == -1)
+        {
+            fprintf(stderr, "No se puedo matar al proceso %d.\n", pid);
+        }
+    }
 }
