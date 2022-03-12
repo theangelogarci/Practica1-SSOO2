@@ -1,0 +1,15 @@
+Creación de directorios completada. 
+Creación de archivos txt con la nota necesaria para aprobar completada. 
+Copia de modelos de examen completada. 
+La nota media de la clase es: 6.000000 
+------------------------------FIN DE PROGRAMA------------------------------ 
+Creación de directorios finalizada. 
+Creación de archivos con nota necesaria para alcanzar la nota de corte, finalizada. 
+Copia de modelos de examen, finalizada. 
+La nota media de la clase es: 6.000000 
+------------------------------FIN DE PROGRAMA------------------------------ 
+Creación de directorios finalizada. 
+Creación de archivos con nota necesaria para alcanzar la nota de corte, finalizada. 
+Copia de modelos de examen, finalizada. 
+La nota media de la clase es: 6.000000 
+------------------------------FIN DE PROGRAMA------------------------------ 

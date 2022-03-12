@@ -1,4 +1,4 @@
-#define EXAMENES "./MODELOSEXAMEN"
+#define EXAMENES "./Examenes"
 #define ESTUDIANTES "./Estudiantes"
 #define FICHERO "./estudiantes_p1.text"
 #define PA "PA"
